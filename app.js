@@ -21,7 +21,8 @@ const request = require('request');
 
 const app = express();
 app.use(bodyParser.json());
-const { IamTokenManager } = require('ibm-watson/auth');
+const { IamTokenManager, IamAuthenticator } = require('ibm-watson/auth');
+const LanguageTranslatorV3 = require('ibm-watson/language-translator/v3');
 
 // Bootstrap application settings
 require('./config/express')(app);
@@ -95,6 +96,34 @@ app.post('/api/v2/translate', (req, res) => {
       console.log(`error = ${response.statusCode}, ${body}`);
     }
   });
+});
+
+app.post('/api/v3/translate', (req, res) => {
+  if (!req.body || !req.body.text || !req.body.text.trim()) {
+    res.json({ result: '' });
+    return;
+  }
+
+  new LanguageTranslatorV3({
+    authenticator: new IamAuthenticator({ apikey: process.env.LANGUAGE_TRANSLATOR_IAM_APIKEY }),
+    serviceUrl: process.env.LANGUAGE_TRANSLATOR_URL,
+    version: '2018-05-01',
+  }).translate(
+    {
+      text: req.body.text,
+      source: 'ja',
+      target: 'ko',
+    },
+  )
+    .then((response) => {
+      res.json({
+        result: response.result.translations.map((x) => x.translation).join('\n'),
+      });
+    })
+    .catch((err) => {
+      res.status(500).end(err);
+      console.log('error: ', err);
+    });
 });
 
 module.exports = app;
