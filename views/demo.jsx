@@ -287,7 +287,7 @@ export class Demo extends Component {
       } else {
         result.translated = '...';
 
-        fetch('/api/v1/translate', {
+        fetch('/api/v2/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

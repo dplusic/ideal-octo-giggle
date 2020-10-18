@@ -73,4 +73,28 @@ app.post('/api/v1/translate', (req, res) => {
   });
 });
 
+app.post('/api/v2/translate', (req, res) => {
+  if (!req.body || !req.body.text || !req.body.text.trim()) {
+    res.json({ result: '' });
+    return;
+  }
+
+  request.post({
+    url: 'https://dapi.kakao.com/v2/translation/translate',
+    headers: { Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}` },
+    form: { src_lang: 'jp', target_lang: 'kr', query: req.body.text },
+  },
+  (error, response, body) => {
+    if (!error && response.statusCode === 200) {
+      const json = JSON.parse(body);
+      res.json({
+        result: json.translated_text.join('\n'),
+      });
+    } else {
+      res.status(response.statusCode).end(body);
+      console.log(`error = ${response.statusCode}, ${body}`);
+    }
+  });
+});
+
 module.exports = app;
