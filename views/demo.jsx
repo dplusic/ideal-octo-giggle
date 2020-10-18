@@ -43,6 +43,7 @@ export class Demo extends Component {
     this.translatedMap = {};
     this.msgCount = 0;
     this.displayedMsgIndex = -1;
+    this.fetchSkipCount = 0;
 
     this.handleSampleClick = this.handleSampleClick.bind(this);
     this.handleSample1Click = this.handleSample1Click.bind(this);
@@ -285,7 +286,16 @@ export class Demo extends Component {
       if (translated) {
         result.translated = translated;
       } else {
+        this.translatedMap[text] = '...';
         result.translated = '...';
+
+        if (resultIndex === msg.results.length - 1) {
+          this.fetchSkipCount += 1;
+          if (this.fetchSkipCount < 5) {
+            return;
+          }
+          this.fetchSkipCount = 0;
+        }
 
         fetch('/api/v2/translate', {
           method: 'POST',
