@@ -297,7 +297,7 @@ export class Demo extends Component {
           this.fetchSkipCount = 0;
         }
 
-        fetch('/api/v3/translate', {
+        fetch('/api/v4/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

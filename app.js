@@ -126,4 +126,27 @@ app.post('/api/v3/translate', (req, res) => {
     });
 });
 
+app.post('/api/v4/translate', (req, res) => {
+  if (!req.body || !req.body.text || !req.body.text.trim()) {
+    res.json({ result: '' });
+    return;
+  }
+
+  request.post({
+    url: 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=ja&to=ko',
+    headers: { 'Ocp-Apim-Subscription-Key': process.env.AZURE_TRANSLATOR_KEY, 'Ocp-Apim-Subscription-Region': 'koreacentral' },
+    json: [{ Text: req.body.text }],
+  },
+  (error, response, body) => {
+    if (!error && response.statusCode === 200) {
+      res.json({
+        result: body[0].translations.map((x) => x.text).join('\n'),
+      });
+    } else {
+      console.log(`error = ${response.statusCode}`, body);
+      res.status(response.statusCode).end(JSON.stringify(body));
+    }
+  });
+});
+
 module.exports = app;
