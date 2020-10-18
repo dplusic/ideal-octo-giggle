@@ -67,8 +67,10 @@ app.post('/api/v1/translate', (req, res) => {
       res.json({
         result: json.message.result.translatedText,
       });
+    } else if (error) {
+      res.status(500).end(JSON.stringify(error));
     } else {
-      res.status(response.statusCode).end(body);
+      res.status(response.statusCode).end(JSON.stringify(body));
       console.log(`error = ${response.statusCode}, ${body}`);
     }
   });
@@ -91,8 +93,10 @@ app.post('/api/v2/translate', (req, res) => {
       res.json({
         result: json.translated_text.join('\n'),
       });
+    } else if (error) {
+      res.status(500).end(JSON.stringify(error));
     } else {
-      res.status(response.statusCode).end(body);
+      res.status(response.statusCode).end(JSON.stringify(body));
       console.log(`error = ${response.statusCode}, ${body}`);
     }
   });
@@ -121,7 +125,7 @@ app.post('/api/v3/translate', (req, res) => {
       });
     })
     .catch((err) => {
-      res.status(500).end(err);
+      res.status(500).end(JSON.stringify(err));
       console.log('error: ', err);
     });
 });
