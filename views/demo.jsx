@@ -37,7 +37,12 @@ export class Demo extends Component {
         speakerLabels: false,
       },
       error: null,
+      lastTranslated: null,
     };
+
+    this.translatedMap = {};
+    this.msgCount = 0;
+    this.displayedMsgIndex = -1;
 
     this.handleSampleClick = this.handleSampleClick.bind(this);
     this.handleSample1Click = this.handleSample1Click.bind(this);
@@ -271,6 +276,40 @@ export class Demo extends Component {
   }
 
   handleFormattedMessage(msg) {
+    const msgIndex = this.msgCount;
+    this.msgCount += 1;
+
+    msg.results.forEach((result, resultIndex) => {
+      const text = result.alternatives[0].transcript;
+      const translated = this.translatedMap[text];
+      if (translated) {
+        result.translated = translated;
+      } else {
+        result.translated = '...';
+
+        fetch('/api/v1/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            this.translatedMap[text] = data.result;
+
+            if (resultIndex === msg.results.length - 1 && msgIndex > this.displayedMsgIndex) {
+              this.displayedMsgIndex = msgIndex;
+              this.setState({ lastTranslated: data.result });
+            } else {
+              result.translated = data.result;
+              const { formattedMessages } = this.state;
+              this.setState({ formattedMessages });
+            }
+          });
+      }
+    });
+
     const { formattedMessages } = this.state;
     this.setState({ formattedMessages: formattedMessages.concat(msg) });
   }
@@ -291,8 +330,16 @@ export class Demo extends Component {
     this.setState({ tokenInterval: setInterval(this.fetchToken, 50 * 60 * 1000) });
   }
 
+  componentDidUpdate() {
+    this.scrollToBottom();
+  }
+
   componentWillUnmount() {
     clearInterval(this.state.tokenInterval);
+  }
+
+  scrollToBottom() {
+    this.zoneEnd.scrollIntoView();
   }
 
   fetchToken() {
@@ -549,9 +596,12 @@ export class Demo extends Component {
 
         <Tabs selected={0}>
           <Pane label="Text">
-            {settingsAtStreamStart.speakerLabels
-              ? <SpeakersView messages={messages} />
-              : <Transcript messages={messages} />}
+            <div>
+              {settingsAtStreamStart.speakerLabels
+                ? <SpeakersView messages={messages} />
+                : <Transcript messages={messages} />}
+              <p>{this.state.lastTranslated}</p>
+            </div>
           </Pane>
           <Pane label="Word Timings and Alternatives">
             <TimingView messages={messages} />
@@ -567,6 +617,10 @@ export class Demo extends Component {
             <JSONView raw={rawMessages} formatted={formattedMessages} />
           </Pane>
         </Tabs>
+        <div
+          style={{ float: 'left', clear: 'both' }}
+          ref={(el) => { this.zoneEnd = el; }}
+        />
       </Dropzone>
     );
   }

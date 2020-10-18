@@ -22,6 +22,7 @@ export class ModelDropdown extends Component {
     if (this.props.token) {
       this.fetchModels(this.props.token);
     }
+    this.modelSelect.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   componentWillReceiveProps(nextProps) {
@@ -61,6 +62,7 @@ export class ModelDropdown extends Component {
         value={model}
         onChange={this.handleChange}
         className="base--select"
+        ref={(el) => { this.modelSelect = el; }}
       >
         {options}
       </select>
